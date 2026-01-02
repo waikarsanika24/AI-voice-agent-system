@@ -44,36 +44,66 @@
         highlight('.nav-link');     
         highlight('.mobile-link');  
     }
-    // ===========================
-    // 2. LOADER (Header/Footer)
+ 
+  
+   // ===========================
+    // 2. LOADER (Corrected for your structure)
     // ===========================
     function loadSkeleton() {
-        const isInPagesFolder = window.location.pathname.includes('/pages/');
-        const pathPrefix = isInPagesFolder ? '../' : '';
+        
+        // Check if we are inside the 'pages' folder
+        const isPagesFolder = window.location.pathname.includes('/pages/');
+        const basePath = isPagesFolder ? '../' : './';
 
+        // Load Header
         const headerContainer = document.getElementById('global-header');
         if (headerContainer) {
-            fetch(pathPrefix + '../components/header.html')
-                .then(res => {
-                    if (!res.ok) throw new Error('Header not found');
-                    return res.text();
-                })
+            // Fetch from components folder
+            fetch(basePath + 'components/header.html') 
+                .then(res => res.text())
                 .then(html => {
-                    headerContainer.innerHTML = html;
-                    initThemeToggle();
-                    initHeaderLogic(); 
+                    let processedHtml = html;
+
+                    // --- PATH FIXING LOGIC ---
+
+                    // 1. If we are deep in /pages/, we need to go up (../) to find assets
+                    if (isPagesFolder) {
+                        // Fix Logo: assets/images/logo.png -> ../assets/images/logo.png
+                        processedHtml = processedHtml.replace(/src="assets\//g, 'src="../assets/');
+                        
+                        // Fix Home Link: index.html -> ../index.html
+                        processedHtml = processedHtml.replace(/href="index.html"/g, 'href="../index.html"');
+
+                        // Fix Page Links: 
+                        // Since we are already in 'pages/', we don't need 'pages/' in the link.
+                        // Example: href="pages/settings.html" -> href="settings.html"
+                        processedHtml = processedHtml.replace(/href="pages\//g, 'href="');
+                    }
+                    
+                    headerContainer.innerHTML = processedHtml;
+                    
+                    // Initialize Toggles
+                    if(typeof initThemeToggle === 'function') initThemeToggle();
+                    if(typeof initHeaderLogic === 'function') initHeaderLogic(); 
                 })
                 .catch(err => console.error('Header Error:', err));
         }
 
+        // Load Footer
         const footerContainer = document.getElementById('global-footer');
         if (footerContainer) {
-            fetch(pathPrefix + '../components/footer.html')
+            fetch(basePath + 'components/footer.html')
                 .then(res => res.text())
-                .then(html => footerContainer.innerHTML = html);
+                .then(html => {
+                     // Same fix for logo in footer if needed
+                     let processedHtml = html;
+                     if (isPagesFolder) {
+                         processedHtml = processedHtml.replace(/src="assets\//g, 'src="../assets/');
+                     }
+                     footerContainer.innerHTML = processedHtml;
+                });
         }
     }
-
     // ===========================
     // 3. THEME TOGGLE
     // ===========================
@@ -147,3 +177,5 @@
         });
     });
 })();
+
+
