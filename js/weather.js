@@ -37,15 +37,35 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
 
       addChatMessage(`
-        <div class="space-y-1">
-          <div class="text-lg font-semibold">
-            🌍 ${data.name}, ${data.sys.country}
-          </div>
-          <div>🌡️ Temp: <b>${Math.round(data.main.temp)}°C</b></div>
-          <div>🌥️ ${data.weather[0].description}</div>
-          <div>💧 Humidity: ${data.main.humidity}%</div>
-          <div>🌬️ Wind: ${data.wind.speed} m/s</div>
-        </div>
+        <div class="space-y-2">
+
+  <div class="text-lg font-semibold flex items-center gap-2">
+    <i class="ri-map-pin-2-fill text-primary"></i>
+    ${data.name}, ${data.sys.country}
+  </div>
+
+  <div class="flex items-center gap-2">
+    <i class="ri-temp-hot-line text-orange-500"></i>
+    Temp: <b>${Math.round(data.main.temp)}°C</b>
+  </div>
+
+  <div class="flex items-center gap-2 capitalize">
+    <i class="ri-cloud-line text-sky-500"></i>
+    ${data.weather[0].description}
+  </div>
+
+  <div class="flex items-center gap-2">
+    <i class="ri-drop-line text-blue-500"></i>
+    Humidity: ${data.main.humidity}%
+  </div>
+
+  <div class="flex items-center gap-2">
+    <i class="ri-windy-line text-cyan-500"></i>
+    Wind: ${data.wind.speed} m/s
+  </div>
+
+</div>
+
       `);
     } catch (err) {
       addChatMessage("❌ Weather fetch failed");
