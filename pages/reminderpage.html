@@ -85,7 +85,7 @@
 
 
             <div
-                class="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-lightBorder dark:border-white/5 pb-8">
+                class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-lightBorder dark:border-white/5 pb-8">
                 <div class="flex flex-col gap-2">
                     <h2 class="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white">Active
                         Schedule</h2>
@@ -100,10 +100,7 @@
             </div>
 
             <div class="w-full relative group z-10">
-                <!-- Glowing Background Effect -->
-                <div
-                    class="absolute -inset-1 rounded-2xl bg-gradient-to-r from-primary to-violet-500 opacity-20 blur-xl transition group-hover:opacity-40 duration-500">
-                </div>
+
 
                 <div
                     class="relative flex w-full items-center rounded-2xl bg-white/80 dark:bg-[#1e1e2d]/80 backdrop-blur-xl p-2 shadow-card dark:shadow-2xl border border-lightBorder dark:border-white/10 ring-1 ring-transparent focus-within:ring-primary/50 transition-all duration-300">
@@ -112,7 +109,7 @@
                         <span class="material-symbols-rounded animate-pulse">auto_awesome</span>
                     </div>
                     <input id="ai-input"
-                        class="flex-1 bg-transparent px-4 py-3 text-lg text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none border-none font-medium"
+                        class="flex-1 bg-transparent px-3 md:px-4 py-3 text-base md:text-lg text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none border-none font-medium"
                         placeholder="Ask AI to set a reminder (e.g., 'Timer for 20m')..." />
                     <div class="flex items-center gap-2 pr-2">
                         <button
@@ -120,7 +117,7 @@
                             <span class="material-symbols-rounded">mic</span>
                         </button>
                         <button id="send-btn"
-                            class="h-10 rounded-xl bg-slate-900 dark:bg-[#3c3b54] px-6 text-sm font-bold text-white hover:bg-primary transition-all shadow-lg hover:shadow-primary/25 active:scale-95">
+                            class="h-10 rounded-xl bg-slate-900 dark:bg-[#3c3b54] px-4 md:px-6 text-sm font-bold text-white hover:bg-primary transition-all shadow-lg hover:shadow-primary/25 active:scale-95">
                             Send
                         </button>
                     </div>
@@ -162,7 +159,7 @@
     </div>
 
     <div id="item-modal"
-        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 p-4">
         <div class="w-full max-w-md scale-95 transform rounded-2xl bg-white dark:bg-[#1e1e2d] p-6 shadow-2xl border border-lightBorder dark:border-[#292839] transition-transform duration-300"
             id="modal-content">
 
@@ -735,4 +732,3 @@
 </body>
 
 </html>
-
