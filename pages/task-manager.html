@@ -37,7 +37,7 @@
       
       <div class="relative z-10 flex flex-col gap-8">
         
-        <div class="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-lightBorder dark:border-white/5 pb-8">
+        <div class="flex flex-col md:flex-row justify-between md:items-end gap-6 border-b border-lightBorder dark:border-white/5 pb-8">
             <div class="flex flex-col gap-2">
                 <h1 class="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white">Task Manager</h1>
                 <p class="text-slate-500 dark:text-slate-400 flex items-center gap-2 font-medium">
@@ -46,8 +46,8 @@
                 </p>
             </div>
             
-            <div class="flex gap-3">
-                <div class="hidden md:flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-[#1e1e2d] border border-slate-200 dark:border-[#3c3b54] text-slate-600 dark:text-white shadow-sm font-semibold text-sm">
+            <div class="flex gap-3 self-end md:self-auto">
+                <div class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-[#1e1e2d] border border-slate-200 dark:border-[#3c3b54] text-slate-600 dark:text-white shadow-sm font-semibold text-sm">
                     <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                     <span>System Online</span>
                 </div>
@@ -57,7 +57,6 @@
                 </button>
             </div>
         </div>
-
         <div class="w-full max-w-2xl">
           <form id="addTaskForm" class="flex flex-col w-full relative group">
             <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
