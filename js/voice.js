@@ -1,205 +1,355 @@
-// ================ ELEMENTS ============================
-const micBtn = document.getElementById("micBtn");
-const chatArea = document.getElementById("chatArea");
-const micStatus = document.getElementById("micStatus");
+ // --- VARIABLES ---
 
-// --- HELPER: Check Mute Status & Toast ---
-function isMicMuted() {
-    const settings = JSON.parse(localStorage.getItem('novaSettings') || '{}');
-    return settings.mic === false;
-}
+    const micBtn = document.getElementById('micBtn');
+    const micIcon = document.getElementById('micIcon');
+    const innerRing = document.getElementById('innerRing');
+    const visualizer = document.getElementById('audioVisualizer');
+    const statusText = document.getElementById('statusText');
+    const liveIndicator = document.getElementById('liveIndicator');
+    const chatArea = document.getElementById('chatArea');
+    const introScreen = document.getElementById('introScreen');
+    const initSystemBtn = document.getElementById('initSystemBtn');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const quickSearchBtn = document.getElementById('quickSearchBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const muteIcon = document.getElementById('muteIcon');
 
-function triggerToast(msg, icon) {
-    if (window.showGlobalToast) window.showGlobalToast(msg, icon);
-}
-
-// ======== SPEECH RECOGNITION (STT) ===========================
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-if (!SpeechRecognition) {
-    console.error("Speech Recognition not supported");
-}
-
-const recognition = new SpeechRecognition();
-recognition.lang = "en-IN"; // Default, can be dynamic if needed
-recognition.interimResults = false;
-recognition.continuous = false;
-
-let isListening = false;
-
-// =================== TEXT TO SPEECH (TTS - SMART VERSION) =======================
-const synth = window.speechSynthesis;
-let voices = [];
-
-// 1. Load Voices Robustly
-function populateVoices() {
-    voices = synth.getVoices();
-}
-populateVoices();
-if (speechSynthesis.onvoiceschanged !== undefined) {
-    speechSynthesis.onvoiceschanged = populateVoices;
-}
-
-// 2. The Smart Speak Function (Connects Persona/Speed/Pitch)
-function speak(text) {
-    if (!synth) return;
-
-    // A. Cancel old audio so it doesn't overlap
-    synth.cancel();
-
-    // B. Get Saved Settings
-    const settings = JSON.parse(localStorage.getItem('novaSettings') || '{}');
-    const savedVoice = settings.voice || 'luna'; // 'atlas', 'luna', 'nexus'
-    const savedLang  = (settings.lang || 'en-us').toLowerCase().split('-')[0]; // 'en', 'hi'
-    const savedSpeed = parseFloat(settings.spd || 1);
+    let isActiveMode = false;
+    let isSystemSpeaking = false;
+    let recognition;
+    let silenceTimer;
+    let isSystemMuted = false;
+    let listeningStartTime = 0; 
+    let pendingText = ""; 
+    const SILENCE_TIMEOUT = 8000; 
+    let lastKeyTime = 0;
     
-    // Base pitch from slider (default 1.0)
-    let finalPitch = parseFloat(settings.ptch || 1); 
-
-    // C. Find Best Voice & Apply Persona Tricks
-    let selectedVoice = null;
-
-    // --- HINDI LOGIC ---
-    if (savedLang === 'hi') {
-        selectedVoice = voices.find(v => v.lang.toLowerCase().includes('hi'));
-        // Pitch Shift for Persona effect in Hindi
-        if (selectedVoice) {
-            if (savedVoice === 'atlas') finalPitch *= 0.8; // Deepen
-            if (savedVoice === 'luna')  finalPitch *= 1.2; // Heighten
-        }
-    } 
-    // --- ENGLISH LOGIC ---
-    else {
-        if (savedVoice === 'luna') {
-            // Try finding a Female voice
-            selectedVoice = voices.find(v => v.lang.includes('en') && (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Google US English')));
-            // If fallback to generic, artificially raise pitch
-            if (!selectedVoice || !selectedVoice.name.includes('Female')) finalPitch *= 1.1;
-        } 
-        else if (savedVoice === 'atlas') {
-            // Try finding a Male voice
-            selectedVoice = voices.find(v => v.lang.includes('en') && (v.name.includes('Male') || v.name.includes('David')));
-            // If fallback to generic, artificially lower pitch
-            if (!selectedVoice || !selectedVoice.name.includes('Male')) finalPitch *= 0.8;
-        }
-        else {
-            // Nexus (Neutral) - Default Google Voice
-            selectedVoice = voices.find(v => v.name.includes('Google') || v.name.includes('Mark'));
-        }
+    function getSettings() {
+        try { return JSON.parse(localStorage.getItem('novaSettings') || '{}'); } 
+        catch (e) { return {}; }
     }
 
-    // Fallback if no specific voice found
-    if (!selectedVoice) selectedVoice = voices[0];
+    // --- INITIALIZATION ---
+    if (initSystemBtn) initSystemBtn.addEventListener('click', startExperience);
 
-    // D. Speak
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.voice = selectedVoice;
-    utterance.rate = savedSpeed;
-    utterance.pitch = finalPitch;
-    utterance.volume = 1;
-
-    synth.speak(utterance);
-}
-
-// =========== MIC BUTTON CLICK (TOGGLE LOGIC) ============================
-micBtn.addEventListener("click", () => {
-    // 1. Check Global Mute
-    if (isMicMuted()) {
-        triggerToast("Microphone is Muted", "mic_off");
-        return;
+    function startExperience() {
+        try { sessionStorage.setItem('introShown', 'true'); } catch(e) {}
+        introScreen.classList.add('fade-out');
+        setTimeout(() => { introScreen.style.display = 'none'; }, 600);
+        initSpeechEngine();
     }
 
-    // 2. Stop if listening
-    if (isListening) {
-        recognition.stop();
-        isListening = false;
-        micBtn.classList.remove("listening");
-        if (micStatus) micStatus.innerText = "Tap to Speak";
-        triggerToast("Microphone Stopped", "stop_circle");
-        return;
-    }
-
-    // 3. Start Listening
     try {
-        recognition.start();
-        isListening = true;
-        micBtn.classList.add("listening");
-        triggerToast("Listening...", "mic");
-        if (micStatus) micStatus.innerText = "Listening...";
-    } catch (err) {
-        console.error("Mic start error:", err);
-    }
-});
-
-// ============ VOICE RESULT ======================
-recognition.onresult = (event) => {
-    const userText = event.results[0][0].transcript.trim().toLowerCase();
-    if (!userText) return;
-
-    addUserMessage(userText);
-
-    // Weather Check
-    const weatherMatch = userText.match(/weather (in|is)?\s*(.+)/);
-    if (weatherMatch) {
-        const city = weatherMatch[2].trim();
-        if(window.fetchWeather) {
-            window.fetchWeather(city); 
-            speak(`Fetching weather for ${city}`);
+        if (sessionStorage.getItem('introShown') !== 'true') {
+            introScreen.style.display = 'flex';
+        } else {
+            introScreen.style.display = 'none';
+            setTimeout(initSpeechEngine, 500);
         }
-        return; 
+    } catch(e) {}
+
+    // --- TOGGLE LOGIC ---
+    function handleToggleCommand() {
+        const now = Date.now();
+        if (now - lastKeyTime < 300) return; 
+        lastKeyTime = now;
+
+        if (isSystemSpeaking) {
+            window.speechSynthesis.cancel();
+            isSystemSpeaking = false;
+            activateActiveMode(); 
+            return;
+        }
+
+        if (isActiveMode) {
+            deactivateActiveMode(); 
+        } else {
+            activateActiveMode(); 
+        }
     }
 
-    // Dummy AI Reply
-    setTimeout(() => {
-        const reply = getDummyReply(userText);
-        addAIMessage(reply);
-        speak(reply);
-    }, 500);
-};
+    micBtn.addEventListener('click', handleToggleCommand);
 
-// ============= MIC END EVENT =========================
-recognition.onend = () => {
-    isListening = false;
-    micBtn.classList.remove("listening");
-    if (micStatus) micStatus.innerText = "Tap to Speak";
-};
+    document.addEventListener('keydown', (e) => {
+        if (e.repeat) return; 
+        if (e.altKey && (e.code === 'KeyV' || e.key === 'v' || e.key === 'V')) {
+            e.preventDefault();
+            e.stopPropagation();
+            micBtn.classList.add('scale-90');
+            setTimeout(() => micBtn.classList.remove('scale-90'), 150);
+            micBtn.click();
+        }
+    });
 
-// =============================== UI HELPERS ===============================
-function addUserMessage(text) {
-    const msg = document.createElement("div");
-    msg.className = "flex justify-end gap-3 animate-fade-in-up";
-    msg.innerHTML = `
-    <div class="flex flex-col items-end max-w-[80%]">
-      <div class="bg-[#28273a] p-4 rounded-2xl rounded-tr-none text-sm text-white shadow-md">${text}</div>
-    </div>`;
-    chatArea.appendChild(msg);
-    scrollChat();
-}
+    // --- ACTIVATE ---
+    function activateActiveMode() {
+        const settings = getSettings();
+        if (settings.mic === false) {
+            if (typeof showGlobalToast === 'function') showGlobalToast("Microphone Access Denied", "mic_off");
+            return;
+        }
 
-function addAIMessage(text) {
-    const msg = document.createElement("div");
-    msg.className = "flex items-start gap-3 animate-fade-in-up";
-    msg.innerHTML = `
-    <div class="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-lg shadow-primary/30">
-      <span class="material-symbols-rounded text-white" style="font-size:16px">smart_toy</span>
-    </div>
-    <div class="flex flex-col max-w-[80%]">
-      <div class="bg-primary/10 border border-primary/20 p-4 rounded-2xl rounded-tl-none text-sm text-slate-800 dark:text-slate-200 shadow-sm">${text}</div>
-    </div>`;
-    chatArea.appendChild(msg);
-    scrollChat();
-}
+        isActiveMode = true; 
+        listeningStartTime = Date.now(); 
+        pendingText = ""; 
+        resetSilenceTimer();
+        
+        statusText.textContent = "Listening...";
+        statusText.classList.remove("text-slate-500", "dark:text-gray-400");
+        statusText.classList.add("text-primary", "animate-pulse");
+        
+        innerRing.classList.add("animate-[spin_4s_linear_infinite]", "opacity-100");
+        innerRing.classList.remove("opacity-40"); 
+        visualizer.classList.add("visualizer-active"); 
+        micBtn.classList.add("mic-active"); 
+        micIcon.textContent = "stop"; 
+        liveIndicator.classList.remove("hidden");
 
-function scrollChat() {
-    chatArea.scrollTop = chatArea.scrollHeight;
-}
+        if(!recognition) initSpeechEngine();
+        try { recognition.start(); } catch(e) {} 
+    }
 
-// ================ DUMMY AI LOGIC ===============================
-function getDummyReply(input) {
-    input = input.toLowerCase();
-    if (input.includes("weather")) return "🌤️ The weather is pleasant today.";
-    if (input.includes("task")) return "You have three pending tasks.";
-    if (input.includes("reminder")) return "I can help you set reminders.";
-    if (input.includes("hello") || input.includes("hi")) return "Hello! How can I help you?";
-    return "I am listening and learning.";
-}
+    // --- DEACTIVATE / PROCESS TEXT ---
+    function deactivateActiveMode(silent = false, inputText = "") {
+        isActiveMode = false; 
+        clearTimeout(silenceTimer);
+
+        let finalInput = inputText || pendingText;
+
+        if (!silent && finalInput.trim() !== "") {
+            
+            // 1. Show EXACTLY what was said (Wake word included)
+            addMessageToChat(finalInput, 'user');
+
+            statusText.textContent = "Processing...";
+            
+            setTimeout(() => {
+                // 2. ★ NO FILTERING: Treat the entire input as the command
+                // Even if it is just "Hey Nova", send "Hey Nova" to the AI.
+                const reply = "I heard: " + finalInput;
+                addMessageToChat(reply, 'ai');
+                speakResponse(reply); 
+            }, 300);
+        }
+        pendingText = ""; 
+
+        statusText.textContent = "Ready";
+        statusText.classList.remove("text-primary", "animate-pulse");
+        statusText.classList.add("text-slate-500", "dark:text-gray-400");
+        
+        innerRing.classList.remove("animate-[spin_4s_linear_infinite]", "opacity-100");
+        innerRing.classList.add("opacity-40");
+        visualizer.classList.remove("visualizer-active"); 
+        micBtn.classList.remove("mic-active"); 
+        micIcon.textContent = "mic"; 
+        liveIndicator.classList.add("hidden");
+        
+        try { recognition.start(); } catch(e) {}
+    }
+
+    // --- SPEECH ENGINE ---
+    function initSpeechEngine() {
+        if (recognition) { try { recognition.abort(); } catch(e) {} recognition = null; }
+
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) return;
+
+        const settings = getSettings();
+        if (settings.mic === false) return; 
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.interimResults = true; 
+        recognition.continuous = true; 
+
+        let langCode = 'en-US'; 
+        if (settings.lang === 'hi') langCode = 'hi-IN';
+        else if (settings.lang === 'en-uk') langCode = 'en-GB';
+        recognition.lang = langCode; 
+
+        const savedWakeWord = (settings.wake || 'hey nova').toLowerCase();
+        let triggerWords = [savedWakeWord, "nova", "hey nova"];
+        if (settings.lang === 'hi') triggerWords.push("हे नोवा", "नमस्ते");
+
+        recognition.onresult = (event) => {
+            if (isSystemSpeaking) return;
+
+            let interimTranscript = '';
+            let finalTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+                else interimTranscript += event.results[i][0].transcript;
+            }
+
+            let cleanTranscript = (finalTranscript || interimTranscript).toLowerCase().trim();
+            cleanTranscript = cleanTranscript.replace(/।/g, '').replace(/[?.!,]/g, '').trim();
+
+            if (cleanTranscript.includes("namaste") || cleanTranscript.includes("bataiye") || cleanTranscript.includes("help you") || cleanTranscript.includes("listening")) return;
+
+            // PASSIVE WAKE WORD (Background)
+            if (!isActiveMode) {
+                const detectedTrigger = triggerWords.find(t => cleanTranscript.includes(t));
+                if (detectedTrigger) {
+                    try { recognition.abort(); } catch(e) {} 
+                    setTimeout(() => {
+                        const msg = getLocalizedGreeting();
+                        addMessageToChat(msg, 'ai');
+                        speakResponse(msg, () => activateActiveMode());
+                    }, 200);
+                }
+                return; 
+            }
+
+            // ACTIVE MODE (Listening)
+            if (isActiveMode) {
+                if (Date.now() - listeningStartTime < 100) return;
+                resetSilenceTimer();
+
+                if (cleanTranscript) {
+                    statusText.textContent = `"${cleanTranscript}"`; 
+                    statusText.classList.remove("text-slate-500", "dark:text-gray-400");
+                    statusText.classList.add("text-slate-900", "dark:text-white");
+                    pendingText = cleanTranscript; 
+                }
+
+                if (finalTranscript) {
+                    if (finalTranscript.trim() === "") return;
+                    deactivateActiveMode(false, finalTranscript); 
+                    pendingText = ""; 
+                }
+            }
+        };
+
+        recognition.onend = () => { 
+            const currentSettings = getSettings();
+            if (currentSettings.mic !== false) {
+                try { recognition.start(); } catch(e) {} 
+            }
+        };
+        try { recognition.start(); } catch(e) {}
+    }
+
+    function resetSilenceTimer() {
+        clearTimeout(silenceTimer);
+        silenceTimer = setTimeout(() => {
+            if (isActiveMode) deactivateActiveMode(); 
+        }, SILENCE_TIMEOUT);
+    }
+
+    // --- UI HELPERS ---
+    quickSearchBtn.addEventListener('click', () => { chatInput.focus(); });
+    sendBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+    function sendMessage() {
+        const text = chatInput.value.trim();
+        if (text) {
+            addMessageToChat(text, 'user');
+            chatInput.value = ''; 
+            setTimeout(() => {
+                const response = "I received your message: " + text;
+                addMessageToChat(response, 'ai');
+                speakResponse(response);
+            }, 600);
+        }
+    }
+
+    muteBtn.addEventListener('click', () => {
+        isSystemMuted = !isSystemMuted;
+        if(isSystemMuted) {
+            muteIcon.textContent = 'volume_off';
+            muteBtn.classList.add('text-red-500');
+            window.speechSynthesis.cancel();
+            isSystemSpeaking = false;
+        } else {
+            muteIcon.textContent = 'volume_up';
+            muteBtn.classList.remove('text-red-500');
+        }
+    });
+
+    function getLocalizedGreeting() {
+        const settings = getSettings();
+        if (settings.lang === 'hi') return "Namaste! Bataiye, main aapki kaise help kar sakta hoon?"; 
+        return "How can I help you?";
+    }
+
+    function updatePersonaHeading() {
+        const settings = getSettings();
+        const voiceName = settings.voice || 'Alex'; 
+        const formattedName = voiceName.charAt(0).toUpperCase() + voiceName.slice(1);
+        const headingSpan = document.getElementById('dynamicName');
+        if(headingSpan) headingSpan.textContent = formattedName + "?";
+    }
+    updatePersonaHeading();
+
+    function addMessageToChat(text, sender) {
+        const div = document.createElement('div');
+        div.className = sender === 'user' ? 'flex justify-end' : 'flex justify-start';
+        let colorClass = sender === 'user' ? 'bg-primary text-white' : 'bg-lightBg dark:bg-white/5 border border-lightBorder dark:border-border text-slate-700 dark:text-gray-300';
+        const bubble = document.createElement('div');
+        bubble.className = `${colorClass} px-4 py-2 rounded-2xl rounded-tr-sm text-sm max-w-[90%] shadow-md mb-1`;
+        bubble.textContent = text;
+        div.appendChild(bubble);
+        chatArea.appendChild(div);
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function speakResponse(text, callback = null) {
+        if(isSystemMuted) { if(callback) callback(); return; }
+
+        isSystemSpeaking = true; 
+        window.speechSynthesis.cancel(); 
+
+        const settings = getSettings();
+        const persona = settings.voice || 'luna';
+        const lang = settings.lang || 'en-us';
+        const speed = parseFloat(settings.spd) || 1.0;
+        
+        let allVoices = window.speechSynthesis.getVoices();
+        if (allVoices.length === 0) {
+            setTimeout(() => speakResponse(text, callback), 200);
+            return;
+        }
+
+        let selectedVoice = null;
+        let finalPitch = 1.0; 
+
+        if (lang === 'hi') {
+            selectedVoice = allVoices.find(v => v.lang === 'hi-IN' || v.lang === 'hi_IN') || allVoices.find(v => v.lang === 'en-IN' || v.lang === 'en_IN');
+            if (persona === 'atlas') finalPitch = 0.7; else if (persona === 'luna') finalPitch = 1.1;
+        } else {
+            const region = lang === 'en-uk' ? 'GB' : 'US';
+            const regionVoices = allVoices.filter(v => v.lang.includes(region) || v.lang.includes(lang === 'en-uk' ? 'en-GB' : 'en-US'));
+            if (persona === 'luna') {
+                selectedVoice = regionVoices.find(v => v.name.includes('Female') || v.name.includes('Zira'));
+            } else {
+                selectedVoice = regionVoices.find(v => v.name.includes('Male') || v.name.includes('David'));
+            }
+            if (!selectedVoice && regionVoices.length > 0) selectedVoice = regionVoices[0];
+        }
+
+        if (!selectedVoice) selectedVoice = allVoices[0];
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.voice = selectedVoice;
+        utterance.pitch = finalPitch;
+        utterance.rate = speed;
+        
+        utterance.onstart = () => { isSystemSpeaking = true; };
+        
+        const safetyTimeout = setTimeout(() => { 
+            isSystemSpeaking = false;
+            if(callback) callback();
+        }, (text.length * 100) + 2000);
+
+        utterance.onend = () => { 
+            clearTimeout(safetyTimeout);
+            setTimeout(() => { 
+                isSystemSpeaking = false; 
+                if (callback) callback();
+            }, 300); 
+        };
+        
+        window.speechSynthesis.speak(utterance);
+    }
