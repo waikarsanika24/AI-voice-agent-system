@@ -90,7 +90,7 @@
               <span id="micIcon" class="material-symbols-rounded text-3xl text-white transition-all">mic</span>
             </button>
 
-            <div class="flex flex-wrap justify-center gap-3 mt-10 w-full max-w-md">
+            <!-- <div class="flex flex-wrap justify-center gap-3 mt-10 w-full max-w-md">
               <button id="weatherBtn" class="action-btn">
                 <span class="material-symbols-rounded text-blue-400 text-lg">partly_cloudy_day</span>
                 <span>Weather</span>
@@ -107,7 +107,41 @@
                 <span class="material-symbols-rounded text-pink-400 text-lg">search</span>
                 <span>Search</span>
               </button>
-            </div>
+            </div> -->
+
+
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 w-full max-w-2xl mx-auto mt-6">
+  
+  <button id="weatherBtn" class="group flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border transition-all duration-200 shadow-sm hover:-translate-y-0.5 active:scale-95
+    bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600 hover:shadow-blue-50
+    dark:bg-white/5 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/10 dark:hover:border-white/20 dark:hover:text-white dark:hover:shadow-none">
+    <span class="material-symbols-rounded text-blue-500 text-lg group-hover:scale-110 transition-transform">partly_cloudy_day</span>
+    <span class="font-medium text-sm">Weather</span>
+  </button>
+
+  <a href="pages/task-manager.html" class="group flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border transition-all duration-200 shadow-sm hover:-translate-y-0.5 active:scale-95
+    bg-white border-slate-200 text-slate-600 hover:border-purple-300 hover:text-purple-600 hover:shadow-purple-50
+    dark:bg-white/5 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/10 dark:hover:border-white/20 dark:hover:text-white dark:hover:shadow-none">
+    <span class="material-symbols-rounded text-purple-500 text-lg group-hover:scale-110 transition-transform">check_circle</span>
+    <span class="font-medium text-sm">Tasks</span>
+  </a>
+
+  <a href="pages/reminderpage.html" class="group flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border transition-all duration-200 shadow-sm hover:-translate-y-0.5 active:scale-95
+    bg-white border-slate-200 text-slate-600 hover:border-amber-300 hover:text-amber-600 hover:shadow-amber-50
+    dark:bg-white/5 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/10 dark:hover:border-white/20 dark:hover:text-white dark:hover:shadow-none">
+    <span class="material-symbols-rounded text-amber-500 text-lg group-hover:scale-110 transition-transform">notifications</span>
+    <span class="font-medium text-sm">Reminders</span>
+  </a>
+
+  <button id="quickSearchBtn" class="group flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border transition-all duration-200 shadow-sm hover:-translate-y-0.5 active:scale-95
+    bg-white border-slate-200 text-slate-600 hover:border-pink-300 hover:text-pink-600 hover:shadow-pink-50
+    dark:bg-white/5 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/10 dark:hover:border-white/20 dark:hover:text-white dark:hover:shadow-none">
+    <span class="material-symbols-rounded text-pink-500 text-lg group-hover:scale-110 transition-transform">search</span>
+    <span class="font-medium text-sm">Search</span>
+  </button>
+
+</div>
+          
         </section>
 
         <aside class="pt-16 lg:col-span-5 mt-12 lg:mt-0">
@@ -153,6 +187,7 @@
   
 </body>
 </html>
+
 
 
 
