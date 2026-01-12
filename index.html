@@ -2,71 +2,96 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <title>Home- AI Voice Console</title>
+  <title>Home - AI Voice Console</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 
   <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
-  
   <script src="./tailwind-setup.js"></script>
 
   <style>
-    /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     .dark ::-webkit-scrollbar-thumb { background: #292839; }
+    
+    body { display: flex; flex-direction: column; min-height: 100vh; }
+
+    .action-btn {
+      @apply flex items-center gap-2 rounded-xl bg-lightCard dark:bg-surface border border-lightBorder dark:border-border px-5 py-2.5 hover:bg-lightBg dark:hover:bg-white/5 hover:border-primary/30 transition-all duration-200 text-sm font-semibold text-slate-700 dark:text-gray-200 shadow-sm hover:shadow-md hover:-translate-y-0.5;
+    }
+
+    .visualizer-active .dance-1 { animation: bounce 0.6s infinite 0.1s; }
+    .visualizer-active .dance-2 { animation: bounce 0.8s infinite 0.2s; }
+    .visualizer-active .dance-3 { animation: bounce 1.0s infinite 0.3s; }
+    .visualizer-active .dance-4 { animation: bounce 0.7s infinite 0.4s; }
+    .visualizer-active .dance-5 { animation: bounce 0.9s infinite 0.5s; }
+
+    @keyframes bounce { 0%, 100% { height: 20%; } 50% { height: 100%; } }
+
+    .mic-active {
+        box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7);
+        animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+    
+    @keyframes pulse-ring {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(124, 58, 237, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+    }
   </style>
 </head>
 
-<body class="bg-lightBg dark:bg-dark text-lightText dark:text-white font-display min-h-[100dvh] flex flex-col overflow-x-hidden transition-colors duration-300">
+<body class="bg-lightBg dark:bg-dark text-lightText dark:text-white font-display overflow-x-hidden transition-colors duration-300">
 
-  <div id="global-header"></div> 
+  <div id="global-header" ></div> 
 
-  <main class="pt-10 flex-1 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 mb-20">
+  <main class="pt-2 pb-20 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
     
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start">
+    <div id="introScreen" class="absolute inset-0 z-50 bg-lightBg dark:bg-[#05050A] flex flex-col items-center justify-center text-center p-6 transition-opacity duration-700 rounded-xl">
+        <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-primary to-purple-500 flex items-center justify-center shadow-[0_0_60px_rgba(124,58,237,0.4)] mb-8 animate-bounce">
+            <span class="material-symbols-rounded text-5xl text-white">graphic_eq</span>
+        </div>
+        <h1 class="text-4xl md:text-6xl font-black tracking-tighter mb-4 text-slate-900 dark:text-white">AI Voice Console</h1>
+        <button id="initSystemBtn" class="group relative px-8 py-4 bg-primary rounded-full text-white font-bold text-lg shadow-lg hover:shadow-primary/50 transition-all hover:scale-105 active:scale-95 cursor-pointer mt-8">
+            Initialize System
+        </button>
+    </div>
 
-        <section class="lg:col-span-7 flex flex-col items-center pt-4 lg:pt-8">
-            
-            <div class="text-center mb-8 relative z-10">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start h-full">
+
+        <section class="lg:col-span-7 flex flex-col items-center pt-8 lg:pt-16">
+            <div class="text-center mb-12 relative z-10">
               <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-tight">
                 How can I help you,
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400 animate-pulse block sm:inline">
-                  Alex?
-                </span>
+                <span id="dynamicName" class="text-primary dark:text-purple-400 block sm:inline font-extrabold">Alex?</span>
               </h2>
-              <p class="text-slate-500 dark:text-gray-400 mt-3 text-base font-medium">I'm listening...</p>
+              <p id="statusText" class="text-slate-500 dark:text-gray-400 mt-3 text-base font-medium transition-all duration-300 h-6">
+                  Ready
+              </p>
             </div>
 
             <div class="relative w-56 h-56 md:w-64 md:h-64 flex items-center justify-center mb-10">
-              <div class="absolute inset-0 rounded-full border border-primary/10 scale-150 animate-[spin_10s_linear_infinite]"></div>
-              <div class="absolute inset-0 rounded-full border border-dashed border-primary/20 opacity-40 animate-[spin_20s_linear_infinite_reverse]"></div>
-              
-              <div class="relative w-40 h-40 md:w-48 md:h-48 rounded-full
-                          bg-gradient-to-br from-white to-slate-100 dark:from-surface dark:to-dark
-                          shadow-[0_0_50px_rgba(108,43,238,0.15)] dark:shadow-glow
-                          flex items-center justify-center
-                          border border-lightBorder dark:border-border z-10">
-                
-                <div class="flex gap-1 opacity-80 items-center h-20">
-                  <div class="w-1 h-6 bg-primary rounded-full animate-[bounce_1s_infinite]"></div>
-                  <div class="w-1 h-12 bg-purple-400 rounded-full animate-[bounce_1.2s_infinite]"></div>
-                  <div class="w-1 h-8 bg-primary rounded-full animate-[bounce_0.8s_infinite]"></div>
-                  <div class="w-1 h-14 bg-pink-500 rounded-full animate-[bounce_1.5s_infinite]"></div>
-                  <div class="w-1 h-10 bg-purple-400 rounded-full animate-[bounce_1.1s_infinite]"></div>
+              <div id="innerRing" class="absolute inset-0 rounded-full border border-dashed border-primary/60 opacity-40 transition-all duration-500"></div>
+              <div class="relative w-40 h-40 md:w-48 md:h-48 rounded-full bg-gradient-to-br from-white to-slate-100 dark:from-surface dark:to-dark shadow-[0_0_50px_rgba(108,43,238,0.15)] dark:shadow-glow flex items-center justify-center border border-lightBorder dark:border-border z-10 overflow-hidden">
+                <div id="audioVisualizer" class="flex gap-1.5 items-end h-16 pb-2 transition-all duration-300">
+                  <div class="w-1.5 h-6 bg-primary rounded-full dance-1 transition-all duration-300"></div>
+                  <div class="w-1.5 h-10 bg-purple-400 rounded-full dance-2 transition-all duration-300"></div>
+                  <div class="w-1.5 h-8 bg-pink-500 rounded-full dance-3 transition-all duration-300"></div>
+                  <div class="w-1.5 h-12 bg-primary rounded-full dance-4 transition-all duration-300"></div>
+                  <div class="w-1.5 h-7 bg-purple-400 rounded-full dance-5 transition-all duration-300"></div>
                 </div>
               </div>
             </div>
 
-            <button id="micBtn" class="group relative h-16 w-16 rounded-full bg-primary flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 shadow-glow hover:shadow-[0_0_50px_rgba(108,43,238,0.6)] z-20">
-              <span class="material-symbols-rounded text-3xl text-white group-hover:animate-pulse">mic</span>
+            <button id="micBtn" class="group relative h-16 w-16 rounded-full bg-primary flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 shadow-glow z-20">
+              <span id="micIcon" class="material-symbols-rounded text-3xl text-white transition-all">mic</span>
             </button>
 
             <div class="flex flex-wrap justify-center gap-3 mt-10 w-full max-w-md">
-              <button id="quickWeatherBtn" class="action-btn">
+              <button id="weatherBtn" class="action-btn">
                 <span class="material-symbols-rounded text-blue-400 text-lg">partly_cloudy_day</span>
                 <span>Weather</span>
               </button>
@@ -78,59 +103,57 @@
                 <span class="material-symbols-rounded text-yellow-400 text-lg">notifications</span>
                 <span>Reminders</span>
               </a>
-              <button class="action-btn">
+              <button id="quickSearchBtn" class="action-btn">
                 <span class="material-symbols-rounded text-pink-400 text-lg">search</span>
                 <span>Search</span>
               </button>
             </div>
         </section>
 
-        <aside class=" pt-5 lg:col-span-5 mt-12 lg:mt-0">
+        <aside class="pt-16 lg:col-span-5 mt-12 lg:mt-0">
             <div class="lg:sticky lg:top-24 flex flex-col bg-lightCard dark:bg-surface border border-lightBorder dark:border-border rounded-3xl shadow-card dark:shadow-none overflow-hidden h-[500px] lg:h-[calc(100vh-160px)]">
-                
                 <div class="p-4 border-b border-lightBorder dark:border-border flex justify-between items-center bg-lightBg/50 dark:bg-white/5">
                     <h3 class="font-bold text-sm text-lightText dark:text-white flex items-center gap-2">
-                    <span class="material-symbols-rounded text-primary text-lg">forum</span>
-                    Live Transcript
+                        <span class="material-symbols-rounded text-primary text-lg">forum</span>
+                        Live Transcript
                     </h3>
-                    <span class="text-[10px] uppercase font-bold tracking-wider bg-green-500/10 text-green-500 px-2 py-0.5 rounded-md border border-green-500/20">Active</span>
+                    <div class="flex items-center gap-2">
+                        <button id="muteBtn" class="p-1.5 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-100 dark:hover:bg-white/10 transition" title="Toggle System Voice">
+                            <span id="muteIcon" class="material-symbols-rounded text-lg">volume_up</span>
+                        </button>
+                        <span id="liveIndicator" class="hidden text-[10px] uppercase font-bold tracking-wider bg-green-500/10 text-green-500 px-2 py-0.5 rounded-md border border-green-500/20">Listening</span>
+                    </div>
                 </div>
 
                 <div id="chatArea" class="flex-1 overflow-y-auto p-4 space-y-3 scroll-smooth bg-lightBg/50 dark:bg-transparent">
                     <div class="flex justify-start">
                         <div class="bg-lightBg dark:bg-white/5 border border-lightBorder dark:border-border text-slate-700 dark:text-gray-300 px-4 py-2 rounded-2xl rounded-tl-sm text-sm max-w-[90%]">
-                        System ready. Listening for voice input...
+                           Hello! I am ready. 
                         </div>
                     </div>
                 </div>
-
                 <div class="p-3 bg-lightBg dark:bg-dark border-t border-lightBorder dark:border-border">
                     <div class="relative">
-                    <input type="text" class="w-full bg-lightCard dark:bg-surface border border-lightBorder dark:border-border rounded-xl py-3 pl-4 pr-10 text-sm text-lightText dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all shadow-sm focus:outline-none" placeholder="Type a message..." />
-                    <button class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-primary transition-colors">
+                    <input id="chatInput" type="text" class="w-full bg-lightCard dark:bg-surface border border-lightBorder dark:border-border rounded-xl py-3 pl-4 pr-10 text-sm text-lightText dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all shadow-sm focus:outline-none" placeholder="Type a message..." />
+                    <button id="sendBtn" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-primary transition-colors">
                         <span class="material-symbols-rounded text-lg">send</span>
                     </button>
                     </div>
                 </div>
             </div>
         </aside>
-
     </div>
   </main>
 
-  <div id="global-footer"></div>
+  <div id="global-footer" ></div>
 
-  <style>
-    .action-btn {
-      @apply flex items-center gap-2 rounded-xl bg-lightCard dark:bg-surface border border-lightBorder dark:border-border px-5 py-2.5 hover:bg-lightBg dark:hover:bg-white/5 hover:border-primary/30 transition-all duration-200 text-sm font-semibold text-slate-700 dark:text-gray-200 shadow-sm hover:shadow-md hover:-translate-y-0.5;
-    }
-  </style>
-
-  <script src="./js/voice.js"></script>
-  <script src="./js/weather.js"></script>
   <script src="./js/main.js"></script>
-
+  <script src="./js/weather.js"></script>
+<script src="./js/voice.js"> </script>
+  
 </body>
 </html>
+
+
 
 
